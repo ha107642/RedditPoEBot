@@ -108,8 +108,8 @@ def get_page(link):
 # E.g. input "Vessel of Vinktar" may return "Vessel of Vinktar (Added Lightning Damage to Attacks)",
 # since there are several versions of Vessel of Vinktar. 
 def get_item_panel(name):
-    name = urllib2.quote(name)
-    url = "https://pathofexile.gamepedia.com/api.php?action=askargs&conditions=Has%%20name::%s&printouts=Has%%20infobox%%20HTML&format=json" % name
+    name = urllib2.quote(name.replace(" ", "_")
+    url = "https://pathofexile.gamepedia.com/api.php?action=askargs&conditions=%s&printouts=Has%%20infobox%%20HTML&format=json" % name
     response = get_page(url)
     jsonData = json.loads(response)
     if "query" not in jsonData:
