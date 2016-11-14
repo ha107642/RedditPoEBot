@@ -77,7 +77,7 @@ def build_reply(text):
         if link is None: continue
         page = get_page(link)
         if page is None: continue
-        reply += "[%s](%s)\n\n" % (name, link)
+        reply += "[%s](%s)\n\n" % (name, link.replace("(", "\\(").replace(")", "\\)"))
         reply += ip.parse_item(page)
     if reply is "": 
         return None        
