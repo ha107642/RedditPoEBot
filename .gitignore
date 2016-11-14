@@ -4,3 +4,4 @@ parsed_comments.txt
 *.pyc
 /.idea
 oauth.ini
+test.py
