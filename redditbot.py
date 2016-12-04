@@ -72,7 +72,6 @@ def build_reply(text):
     # Because a comment can only have a max length, limit to only the first 30 requests
     if len(unique_links) > 30: unique_links = unique_links[0:30]
     for i in unique_links:
-        print i
         name, link = lookup_name(i)
         if link is None: continue
         escaped_link = link.replace("(", "\\(").replace(")", "\\)")
