@@ -1,10 +1,10 @@
 #!/bin/bash
 ## Simple shell script that reboots the bot if it crashes
 
-prefix="[$(date +"%Y-%m-%d %H:%M:%S")] "
+#prefix="[$(date +"%Y-%m-%d %H:%M:%S")] "
 
-echo $prefix "Running bot."
+echo "[$(date +"%Y-%m-%d %H:%M:%S")] Running bot."
 until python redditbot.py; do
-	echo $prefix "CRASH" >&2
+	echo "[$(date +"%Y-%m-%d %H:%M:%S")] CRASH" >&2
 	sleep 1
 done
