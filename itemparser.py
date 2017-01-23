@@ -110,6 +110,8 @@ def parse_item_fallback(page):
 def format_text(child, start_of_line = True):
     if type(child) == NavigableString:
         classes = child.parent["class"]
+    elif type(child) == Tag and child.name == 'br':
+        classes = child.parent["class"]
     else:
         classes = child["class"]
 
