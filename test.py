@@ -1,5 +1,7 @@
 import redditbot as r
 
+print r.build_reply("TEsting [[Crown of the]]")
+
 assert r.build_reply("[Sire of Shards] is my favorite item") == None
 assert r.build_reply("[Sire of Shards]] is my favorite item") == None
 assert r.build_reply("[[]] is my favorite item") == None
@@ -31,3 +33,4 @@ assert r.build_reply("[[Oro's Sacrifice]]") == u"[Oro's Sacrifice](http://pathof
 
 assert r.build_reply("[[Emperor's Mastery]]") == u"[Emperor's Mastery](http://pathofexile.gamepedia.com/Emperor%27s_Mastery)\n\n>######Emperor's Mastery[](#break)Prismatic Jewel\n>>####Limited to: **1**\n>>[](#line)\n>>#####4% increased maximum Life\n>>#####3% increased Character Size\n>>#####5% increased Global Defences\n>>#####(5-7)% increased Attributes\n>>[](#line)\n>>*Learn as much as you can,*\n>>*and surround yourself with people who know the rest.*\n>>\n>>[](#line)\n>>####Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.\n\n---\n\n^^Questions? ^^Message ^^/u/ha107642 ^^\u2014 ^^Call ^^wiki ^^pages ^^\\(e.g. ^^items ^^or ^^gems)) ^^with ^^[[NAME]] ^^\u2014 ^^I ^^will ^^only ^^post ^^panels ^^for ^^*unique* ^^items ^^\u2014 ^^[Github](https://github.com/ha107642/RedditPoEBot/)\n"
 
+assert r.build_reply("TEsting [[Crown of the]]") == u'[Crown of the Pale King](http://pathofexile.gamepedia.com/Crown_of_the_Pale_King)\n\n>######Crown of the Pale King[](#break)Regicide Mask\n>>####Evasion: **(305 to 366)**\n>>####Energy Shield: **(90 to 108)**\n>>[](#line)\n>>####Requires Level **52**, **58** Dex, **58** Int\n>>[](#line)\n>>####Drop Restrictions\n>>####League(s):**Tempest**\n>>[](#line)\n>>#####(150-200)% increased Evasion and Energy Shield\n>>#####(0.4-0.8)% of Physical Attack Damage Leeched as Life\n>>#####Reflects 100 to 150 Physical Damage to Melee Attackers\n>>#####30% of Damage you Reflect to Enemies is gained as Life\n>>[](#line)\n>>*A lightless world*\n>>\n>>*a silent reign*\n>>\n>>*two sightless eyes*\n>>\n>>*feed on your pain.*\n>>\n\n---\n\n^^Questions? ^^Message ^^/u/ha107642 ^^\u2014 ^^Call ^^wiki ^^pages ^^\\(e.g. ^^items ^^or ^^gems)) ^^with ^^[[NAME]] ^^\u2014 ^^I ^^will ^^only ^^post ^^panels ^^for ^^*unique* ^^items ^^\u2014 ^^[Github](https://github.com/ha107642/RedditPoEBot/)\n'
