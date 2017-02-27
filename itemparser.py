@@ -33,7 +33,7 @@ def parse_item(panel):
             elif unicode(child) == '<br/>':
                 lines.append(line)
                 line = ""
-            else: 
+            else:
                 line += format_text(child, line == "") or ""
         if line is not "":
             lines.append(line)
@@ -109,11 +109,14 @@ def parse_item_fallback(page):
 
 def format_text(child, start_of_line = True):
     if type(child) == NavigableString:
-        classes = child.parent["class"]
+        classes = child.parent.get("class")
     elif type(child) == Tag and child.name == 'br':
-        classes = child.parent["class"]
+        classes = child.parent.get("class")
     else:
-        classes = child["class"]
+        classes = child.get("class")
+
+    if not classes:
+        return child.string
 
     if "-value" in classes:
         return "**%s**" % child.string
