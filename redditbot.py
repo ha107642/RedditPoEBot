@@ -140,8 +140,6 @@ def signal_handler(signal, frame):
     redis.save()
     sys.exit(0)
 
-get_item_panel("Facebreaker")
-
 # Only run the following if we are actually executing this file directly.
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
