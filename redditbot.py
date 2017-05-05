@@ -160,10 +160,14 @@ if __name__ == "__main__":
     # The ID's of parsed comments is compared with the already parsed comments so the list stays clean
     # and memory is not increased. It sleeps for 15 seconds to wait for new posts.
     while True:
-        bot_comments()
-        time.sleep(5)
-        bot_submissions()
-        time.sleep(5)
-        bot_messages()
-        oauth.refresh()
-        time.sleep(5)
+        try:
+            bot_comments()
+            time.sleep(5)
+            bot_submissions()
+            time.sleep(5)
+            bot_messages()
+            oauth.refresh()
+            time.sleep(5)
+        except praw.errors.HTTPException as e:
+            print e
+            time.sleep(60)
