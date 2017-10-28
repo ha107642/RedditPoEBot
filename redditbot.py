@@ -126,7 +126,10 @@ def lookup_name(name):
     name = urllib2.quote(name)
     search_url = "http://pathofexile.gamepedia.com/api.php?action=opensearch&search=%s" % name
     response = get_page(search_url)
-    hits = json.loads(response)
+    try:
+        hits = json.loads(response)
+    except ValueError as e:
+        return (None, None)
     # opensearch returns a json array in a SoA fashion,
     # where arr[0] is the search text, arr[1] matching pages,
     # arr[2] ??, arr[3] links to the matching pages.
