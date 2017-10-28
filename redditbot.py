@@ -4,7 +4,6 @@ import re
 import urllib2
 import signal, sys
 import itemparser as ip
-import OAuth2Util
 import redis
 import json
 
@@ -19,7 +18,7 @@ def add_parsed(id):
     return redis.sadd("parsed_comments", id)
 
 def bot_comments():
-    sub_comments = subreddit.get_comments()
+    sub_comments = subreddit.comments()
     for comment in sub_comments:
         # Checks if the post is not actually the bot itself (since the details say [[NAME]])
         if not is_parsed(comment.id) and not str(comment.author) == username:
@@ -33,7 +32,7 @@ def bot_comments():
             add_parsed(comment.id)
 
 def bot_submissions():
-    sub_subs = subreddit.get_new(limit=5)
+    sub_subs = subreddit.new(limit=5)
     for submission in sub_subs:
         if not is_parsed(submission.id):
             reply = build_reply(submission.selftext)
@@ -45,7 +44,7 @@ def bot_submissions():
             add_parsed(submission.id)
 
 def bot_messages():
-    msg_messages = r.get_messages(limit=20)
+    msg_messages = r.inbox.messages(limit=20)
     for message in msg_messages:
         if not is_parsed(message.id):
             reply = build_reply(message.body)
@@ -61,7 +60,7 @@ pattern = re.compile("\[\[([^\[\]]*)\]\]")
 
 def build_reply(text):
     reply = ""
-    if text is None: return None 
+    if text is None: return None
     links = pattern.findall(text)
     if len(links) == 0: return None
     # Remove duplicates
@@ -72,12 +71,11 @@ def build_reply(text):
     # Because a comment can only have a max length, limit to only the first 30 requests
     if len(unique_links) > 30: unique_links = unique_links[0:30]
     for i in unique_links:
-        print i
         name, link = lookup_name(i)
         if link is None: continue
         escaped_link = link.replace("(", "\\(").replace(")", "\\)")
         specific_name, panel = get_item_panel(name) # Try the new version first
-        if panel is not None:                
+        if panel is not None:
             if specific_name != name:
                 reply += "[%s](%s) *(Showing %s)*\n\n" % (name, escaped_link, specific_name)
             else:
@@ -88,8 +86,8 @@ def build_reply(text):
             if page is None: continue
             reply += "[%s](%s)\n\n" % (name, escaped_link)
             reply += ip.parse_item_fallback(page)
-    if reply is "": 
-        return None        
+    if reply is "":
+        return None
     return reply + footer_text
 
 # Fetches a page and returns the response.
@@ -106,7 +104,7 @@ def get_page(link):
 
 # The input name might differ from what we return as name.
 # E.g. input "Vessel of Vinktar" may return "Vessel of Vinktar (Added Lightning Damage to Attacks)",
-# since there are several versions of Vessel of Vinktar. 
+# since there are several versions of Vessel of Vinktar.
 def get_item_panel(name):
     name = urllib2.quote(name)
     url = "https://pathofexile.gamepedia.com/api.php?action=askargs&conditions=Has%%20name::%s&printouts=Has%%20infobox%%20HTML&format=json" % name
@@ -129,12 +127,12 @@ def lookup_name(name):
     search_url = "http://pathofexile.gamepedia.com/api.php?action=opensearch&search=%s" % name
     response = get_page(search_url)
     hits = json.loads(response)
-    # opensearch returns a json array in a SoA fashion, 
+    # opensearch returns a json array in a SoA fashion,
     # where arr[0] is the search text, arr[1] matching pages,
     # arr[2] ??, arr[3] links to the matching pages.
     # e.g. ["facebreaker",["Facebreaker","FacebreakerUnarmedMoreDamage"],["",""],["http://pathofexile.gamepedia.com/Facebreaker","http://pathofexile.gamepedia.com/FacebreakerUnarmedMoreDamage"]]
     if len(hits[1]) == 0:
-        return (None, None) # If we did not find anything, return None. 
+        return (None, None) # If we did not find anything, return None.
     return (hits[1][0], hits[3][0]) # Otherwise, return the first match in a tuple with (name, url).
 
 def signal_handler(signal, frame):
@@ -151,11 +149,10 @@ if __name__ == "__main__":
 
     redis = redis.StrictRedis(host="localhost")
 
-    oauth = OAuth2Util.OAuth2Util(r)
-    username = r.get_me().name
+    username = r.user.me().name
 
     # Fill in the subreddit(s) here. Multisubs are done with + (e.g. MagicTCG+EDH)
-    subreddit = r.get_subreddit('pathofexile')
+    subreddit = r.subreddit('pathofexile')
 
     # Infinite loop that calls the function. The function outputs the post-ID's of all parsed comments.
     # The ID's of parsed comments is compared with the already parsed comments so the list stays clean
@@ -167,8 +164,7 @@ if __name__ == "__main__":
             bot_submissions()
             time.sleep(5)
             bot_messages()
-            oauth.refresh()
             time.sleep(5)
-        except praw.errors.HTTPException as e:
+        except praw.exceptions.PRAWException as e:
             print e
             time.sleep(60)
