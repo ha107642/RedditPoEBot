@@ -8,8 +8,6 @@ import re
 #     "-corrupted": "%s"
 # }
 
-hide_string = "#####&#009;\n\n######&#009;\n\n####&#009;\n\n%s\n\n***\n\n"
-
 def parse_item(panel):
     panel = panel.replace("<br>", "<br/>") #BeautifulSoup does not seem to correctly parse <br>, so we add the /.
     panel = fix_wiki_links(panel)
@@ -39,12 +37,11 @@ def parse_item(panel):
             lines.append(line)
         groups.append(lines)
     item_string = make_string(unique_name, base_item, groups)
-    #return (hide_string % unique_name) + item_string + "\n\n" #Add hiding.. Shows "GGG forum post. Hover to view.".
     return item_string + "\n\n"
 
-pattern = re.compile("\[\[([^\[\]]*)\]\]")
+PATTERN = re.compile("\[\[([^\[\]]*)\]\]")
 def fix_wiki_links(panel):
-    return pattern.sub(build_link, panel)
+    return PATTERN.sub(build_link, panel)
 
 def build_link(match):
     content = match.group(1)
@@ -76,36 +73,6 @@ def get_next(tag, next):
         else:
             count = len(tag.contents)
     return (tag, next, count)
-
-def parse_item_fallback(page):
-    soup = BeautifulSoup(page, "html.parser")
-    # Find div with class item-box. Only unique items so far..
-    itembox = soup.find("div", { "class": "item-box" })
-    if not itembox or "-unique" not in itembox["class"]: return ""
-    header = itembox.find("span", { "class": "header" })
-    unique_name = header.children.next().text
-    base_item = header.find("a").text
-    
-    unparsed_groups = itembox.find("span", { "class": "item-stats" }).find_all("span", { "class": "group" })
-    
-    groups = []
-    for group in unparsed_groups:
-        lines = []
-        line = ""
-        for child in group.children:
-            if not unicode(child).strip():
-                continue #Ignore whitespace lines.
-            elif unicode(child) == '<br/>':
-                lines.append(line)
-                line = ""
-            else: 
-                line += format_text(child) or ""
-        if line is not "":
-            lines.append(line)
-        groups.append(lines)
-    item_string = make_string(unique_name, base_item, groups)
-    #return (hide_string % unique_name) + item_string + "\n\n" #Add hiding.. Shows "GGG forum post. Hover to view.".
-    return item_string + "\n\n"
 
 def format_text(child, start_of_line = True):
     if type(child) == NavigableString:
