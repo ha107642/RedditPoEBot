@@ -1,21 +1,24 @@
 import time
-import praw
 import re
 import urllib2
 import signal, sys
-import itemparser as ip
 import redis
 import json
+import HTMLParser
 
-footer_text = u"---\n\n^^Questions? ^^Message ^^/u/ha107642 ^^\u2014 ^^Call ^^wiki ^^pages ^^\\(e.g. ^^items ^^or ^^gems)) ^^with ^^[[NAME]] ^^\u2014 ^^I ^^will ^^only ^^post ^^panels ^^for ^^*unique* ^^items ^^\u2014 ^^[Github](https://github.com/ha107642/RedditPoEBot/)\n"
+import praw
+
+import itemparser as ip
+
+FOOTER_TEXT = u"---\n\n^^Questions? ^^Message ^^/u/ha107642 ^^\u2014 ^^Call ^^wiki ^^pages ^^\\(e.g. ^^items ^^or ^^gems)) ^^with ^^[[NAME]] ^^\u2014 ^^I ^^will ^^only ^^post ^^panels ^^for ^^*unique* ^^items ^^\u2014 ^^[Github](https://github.com/ha107642/RedditPoEBot/)\n"
 
 # Are comments, submissions and messages really unique among each other?
 # Can a comment and a private message have the same ID?
-def is_parsed(id):
-    return redis.sismember("parsed_comments", id)
+def is_parsed(comment_id):
+    return redis.sismember("parsed_comments", comment_id)
 
-def add_parsed(id):
-    return redis.sadd("parsed_comments", id)
+def add_parsed(comment_id):
+    return redis.sadd("parsed_comments", comment_id)
 
 def bot_comments():
     sub_comments = subreddit.comments()
@@ -62,7 +65,7 @@ def build_reply(text):
     reply = ""
     if text is None: return None
     links = pattern.findall(text)
-    if len(links) == 0: return None
+    if not links: return None
     # Remove duplicates
     unique_links = []
     for i in links:
@@ -71,29 +74,25 @@ def build_reply(text):
     # Because a comment can only have a max length, limit to only the first 30 requests
     if len(unique_links) > 30: unique_links = unique_links[0:30]
     for i in unique_links:
+        if not i: continue
         name, link = lookup_name(i)
         if link is None: continue
         escaped_link = link.replace("(", "\\(").replace(")", "\\)")
-        specific_name, panel = get_item_panel(name) # Try the new version first
+        specific_name, panel = get_item_panel(name)
         if panel is not None:
             if specific_name != name:
                 reply += "[%s](%s) *(Showing %s)*\n\n" % (name, escaped_link, specific_name)
             else:
                 reply += "[%s](%s)\n\n" % (name, escaped_link)
             reply += ip.parse_item(panel)
-        else: # Fallback to old version
-            page = get_page(link)
-            if page is None: continue
-            reply += "[%s](%s)\n\n" % (name, escaped_link)
-            reply += ip.parse_item_fallback(page)
     if reply is "":
         return None
-    return reply + footer_text
+    return reply + FOOTER_TEXT
 
 # Fetches a page and returns the response.
 def get_page(link):
     try:
-        request = urllib2.Request(link, headers={"User-Agent": "PoEWiki"})
+        request = urllib2.Request(link, headers={"User-Agent": "PoEWikiBot", "Accept": "*/*"})
         response = urllib2.urlopen(request)
         return response.read()
     except urllib2.HTTPError, e:
@@ -107,19 +106,16 @@ def get_page(link):
 # since there are several versions of Vessel of Vinktar.
 def get_item_panel(name):
     name = urllib2.quote(name)
-    url = "https://pathofexile.gamepedia.com/api.php?action=askargs&conditions=Has%%20name::%s&printouts=Has%%20infobox%%20HTML&format=json" % name
+    url = "https://pathofexile.gamepedia.com/api.php?action=cargoquery&tables=items&fields=items.html,items.name&where=items.name%%20=%%20%%22%s%%22&format=json" % name
     response = get_page(url)
-    jsonData = json.loads(response)
-    if "query" not in jsonData:
+    json_data = json.loads(response)
+    if "cargoquery" not in json_data:
         return (None, None)
-    pageList = jsonData["query"]["results"]
-    if not pageList:
-        return (None, None)
-    for key, item in pageList.iteritems():
-        infobox = item["printouts"]["Has infobox HTML"]
-        for html in infobox:
-            if html is not None:
-                return (key, html)
+
+    for item in json_data["cargoquery"]:
+        obj = item["title"]
+        if obj is not None:
+            return (obj["name"], HTMLParser.HTMLParser().unescape(obj["html"]))
     return (None, None)
 
 def lookup_name(name):
@@ -128,13 +124,13 @@ def lookup_name(name):
     response = get_page(search_url)
     try:
         hits = json.loads(response)
-    except ValueError as e:
+    except ValueError:
         return (None, None)
     # opensearch returns a json array in a SoA fashion,
     # where arr[0] is the search text, arr[1] matching pages,
     # arr[2] ??, arr[3] links to the matching pages.
     # e.g. ["facebreaker",["Facebreaker","FacebreakerUnarmedMoreDamage"],["",""],["http://pathofexile.gamepedia.com/Facebreaker","http://pathofexile.gamepedia.com/FacebreakerUnarmedMoreDamage"]]
-    if len(hits[1]) == 0:
+    if not hits[1]:
         return (None, None) # If we did not find anything, return None.
     return (hits[1][0], hits[3][0]) # Otherwise, return the first match in a tuple with (name, url).
 
