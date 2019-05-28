@@ -11,6 +11,7 @@ import praw
 import itemparser as ip
 
 FOOTER_TEXT = u"---\n\n^^Questions? ^^Message ^^/u/ha107642 ^^\u2014 ^^Call ^^wiki ^^pages ^^\\(e.g. ^^items ^^or ^^gems)) ^^with ^^[[NAME]] ^^\u2014 ^^I ^^will ^^only ^^post ^^panels ^^for ^^*unique* ^^items ^^\u2014 ^^[Github](https://github.com/ha107642/RedditPoEBot/)\n"
+IGNORE_LIST_FILENAME = "username_ignore_list.txt"
 
 # Are comments, submissions and messages really unique among each other?
 # Can a comment and a private message have the same ID?
@@ -20,11 +21,14 @@ def is_parsed(comment_id):
 def add_parsed(comment_id):
     return redis.sadd("parsed_comments", comment_id)
 
+def is_ignored(username):
+    return username in ignore_list
+
 def bot_comments():
     sub_comments = subreddit.comments()
     for comment in sub_comments:
         # Checks if the post is not actually the bot itself (since the details say [[NAME]])
-        if not is_parsed(comment.id) and not str(comment.author) == username:
+        if not is_parsed(comment.id) and not is_ignored(comment.author):
             reply = build_reply(comment.body)
             if reply:
                 try:
@@ -142,8 +146,10 @@ def signal_handler(signal, frame):
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
 
+    ignore_list = [line.rstrip('\n') for line in open(IGNORE_LIST_FILENAME)]
+
     # This string is sent by praw to reddit in accordance to the API rules
-    user_agent = ("REDDIT Bot v1.4 by /u/ha107642")
+    user_agent = ("REDDIT Bot v1.5 by /u/ha107642")
     r = praw.Reddit(user_agent=user_agent)
 
     redis = redis.StrictRedis(host="localhost")
