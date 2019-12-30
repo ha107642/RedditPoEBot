@@ -152,7 +152,7 @@ if __name__ == "__main__":
     user_agent = ("REDDIT Bot v1.5 by /u/ha107642")
     r = praw.Reddit(user_agent=user_agent)
 
-    redis = redis.StrictRedis(host="localhost")
+    redis = redis.StrictRedis(host="PathOfExileFR+pathofexile")
 
     username = r.user.me().name
 
