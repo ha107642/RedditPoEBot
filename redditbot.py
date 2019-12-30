@@ -152,12 +152,12 @@ if __name__ == "__main__":
     user_agent = ("REDDIT Bot v1.5 by /u/ha107642")
     r = praw.Reddit(user_agent=user_agent)
 
-    redis = redis.StrictRedis(host="PathOfExileFR+pathofexile")
+    redis = redis.StrictRedis(host="localhost")
 
     username = r.user.me().name
 
     # Fill in the subreddit(s) here. Multisubs are done with + (e.g. MagicTCG+EDH)
-    subreddit = r.subreddit('pathofexile')
+    subreddit = r.subreddit('PathOfExileFR+pathofexile')
 
     # Infinite loop that calls the function. The function outputs the post-ID's of all parsed comments.
     # The ID's of parsed comments is compared with the already parsed comments so the list stays clean
