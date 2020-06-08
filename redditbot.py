@@ -82,6 +82,7 @@ def build_reply(text):
         name, link = lookup_name(i)
         if link is None: continue
         escaped_link = link.replace("(", "\\(").replace(")", "\\)")
+        name=desynthesize_name(name)
         specific_name, panel = get_item_panel(name)
         if panel is not None:
             if specific_name != name:
@@ -92,6 +93,16 @@ def build_reply(text):
     if reply is "":
         return None
     return reply + FOOTER_TEXT
+
+# The item name does not have (Synthesized) or (Fractured) even though that is the page name.
+def desynthesize_name(name):
+    synth_str=" (Synthesised)"
+    frac_str=" (Fractured)"
+    if name.endswith(synth_str):
+        return name[:-1*len(synth_str)]
+    if name.endswith(frac_str):
+        return name[:-1*len(frac_str)]
+    return name
 
 # Fetches a page and returns the response.
 def get_page(link):
