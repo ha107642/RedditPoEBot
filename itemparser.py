@@ -16,8 +16,8 @@ def parse_item(panel):
     itembox = soup.find("span", { "class": "item-box" })
     if not itembox or "-unique" not in itembox["class"]: return ""
     header = itembox.find("span", { "class": "header" })
-    unique_name = unicode(header.children.next())
-    base_item = unicode(header.children.next().next.next)
+    unique_name = unicode(header.children.next().next)
+    base_item = unicode(header.children.next().next.next.next)
     
     unparsed_groups = itembox.find("span", { "class": "item-stats" }).find_all("span", { "class": "group" })
     
