@@ -21,8 +21,8 @@ def is_parsed(comment_id):
 def add_parsed(comment_id):
     return redis.sadd("parsed_comments", comment_id)
 
-def is_ignored(username):
-    return username in ignore_list
+def is_ignored(user):
+    return user.name in ignore_list
 
 def bot_comments():
     sub_comments = subreddit.comments()
