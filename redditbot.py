@@ -82,6 +82,7 @@ def build_reply(text):
         name, link = lookup_name(i)
         if link is None: continue
         escaped_link = link.replace("(", "\\(").replace(")", "\\)")
+        escaped_link = escaped_link.replace("https://pathofexile.fandom.com/", "https://www.poewiki.net/")
         name = desynthesize_name(name)
         specific_name, panel = get_item_panel(name)
         if panel is not None:
