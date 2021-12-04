@@ -16,8 +16,8 @@ def parse_item(panel):
     itembox = soup.find("span", { "class": "item-box" })
     if not itembox or "-unique" not in itembox["class"]: return ""
     header = itembox.find("span", { "class": "header" })
-    unique_name = unicode(header.children.next().next)
-    base_item = unicode(header.children.next().next.next.next)
+    unique_name = next(header.children).next
+    base_item = next(header.children).next.next.next
     
     unparsed_groups = itembox.find("span", { "class": "item-stats" }).find_all("span", { "class": "group" })
     
@@ -26,9 +26,9 @@ def parse_item(panel):
         lines = []
         line = ""
         for child in flatten(group.extract()):
-            if not unicode(child).strip():
+            if child.string and not child.string.strip():
                 continue #Ignore whitespace lines.
-            elif unicode(child) == '<br/>':
+            elif child.name == 'br':
                 lines.append(line)
                 line = ""
             else:

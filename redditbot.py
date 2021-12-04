@@ -1,10 +1,12 @@
 import time
 import re
-import urllib2
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 import signal, sys
 import redis
 import json
-import HTMLParser
+import html
 
 import praw
 
@@ -33,8 +35,8 @@ def bot_comments():
             if reply:
                 try:
                     comment.reply(reply)
-                except Exception, e:
-                    print str(e)
+                except Exception as e:
+                    print(str(e))
             # Add the post to the set of parsed comments
             add_parsed(comment.id)
 
@@ -46,8 +48,8 @@ def bot_submissions():
             if reply:
                 try:
                     submission.add_comment(reply)
-                except Exception, e:
-                    print str(e)
+                except Exception as e:
+                    print(str(e))
             add_parsed(submission.id)
 
 def bot_messages():
@@ -58,8 +60,8 @@ def bot_messages():
             if reply:
                 try:
                     message.reply(reply)
-                except Exception, e:
-                    print str(e)
+                except Exception as e:
+                    print(str(e))
             add_parsed(message.id)
 
 # Regex Magic that finds the text encaptured with [[ ]]
@@ -67,7 +69,7 @@ pattern = re.compile("\[\[([^\[\]]*)\]\]")
 
 def build_reply(text):
     reply = ""
-    if text is None: return None
+    if text == None: return None
     links = pattern.findall(text)
     if not links: return None
     # Remove duplicates
@@ -80,18 +82,17 @@ def build_reply(text):
     for i in unique_links:
         if not i: continue
         name, link = lookup_name(i)
-        if link is None: continue
+        if link == None: continue
         escaped_link = link.replace("(", "\\(").replace(")", "\\)")
-        escaped_link = escaped_link.replace("https://pathofexile.fandom.com/", "https://www.poewiki.net/")
         name = desynthesize_name(name)
         specific_name, panel = get_item_panel(name)
-        if panel is not None:
+        if panel != None:
             if specific_name != name:
                 reply += "[%s](%s) *(Showing %s)*\n\n" % (name, escaped_link, specific_name)
             else:
                 reply += "[%s](%s)\n\n" % (name, escaped_link)
             reply += ip.parse_item(panel)
-    if reply is "":
+    if reply == "":
         return None
     return reply + FOOTER_TEXT
 
@@ -108,21 +109,21 @@ def desynthesize_name(name):
 # Fetches a page and returns the response.
 def get_page(link):
     try:
-        request = urllib2.Request(link, headers={"User-Agent": "PoEWikiBot", "Accept": "*/*"})
-        response = urllib2.urlopen(request)
+        request = Request(link, headers={"User-Agent": "PoEWikiBot", "Accept": "*/*"})
+        response = urlopen(request)
         return response.read()
-    except urllib2.HTTPError, e:
+    except HTTPError as e:
         return None
-    except AttributeError, e:
-        print "ERROR: %s" % str(e)
+    except AttributeError as e:
+        print("ERROR: %s" % str(e))
         return None
 
 # The input name might differ from what we return as name.
 # E.g. input "Vessel of Vinktar" may return "Vessel of Vinktar (Added Lightning Damage to Attacks)",
 # since there are several versions of Vessel of Vinktar.
 def get_item_panel(name):
-    name = urllib2.quote(name)
-    url = "https://pathofexile.gamepedia.com/api.php?action=cargoquery&tables=items&fields=items.html,items.name&where=items.name%%20=%%20%%22%s%%22&format=json" % name
+    name = quote(name)
+    url = "https://www.poewiki.net/w/api.php?action=cargoquery&tables=items&fields=items.html,items.name&where=items.name%%20=%%20%%22%s%%22&format=json" % name
     response = get_page(url)
     json_data = json.loads(response)
     if "cargoquery" not in json_data:
@@ -130,13 +131,13 @@ def get_item_panel(name):
 
     for item in json_data["cargoquery"]:
         obj = item["title"]
-        if obj is not None:
-            return (obj["name"], HTMLParser.HTMLParser().unescape(obj["html"]))
+        if obj != None:
+            return (obj["name"], html.unescape(obj["html"]))
     return (None, None)
 
 def lookup_name(name):
-    name = urllib2.quote(name)
-    search_url = "http://pathofexile.gamepedia.com/api.php?action=opensearch&search=%s" % name
+    name = quote(name)
+    search_url = "https://www.poewiki.net/w/api.php?action=opensearch&search=%s" % name
     response = get_page(search_url)
     try:
         hits = json.loads(response)
@@ -183,5 +184,5 @@ if __name__ == "__main__":
             bot_messages()
             time.sleep(5)
         except praw.exceptions.PRAWException as e:
-            print e
+            print(e)
             time.sleep(60)
