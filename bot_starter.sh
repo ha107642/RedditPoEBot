@@ -4,7 +4,7 @@
 #prefix="[$(date +"%Y-%m-%d %H:%M:%S")] "
 
 echo "[$(date +"%Y-%m-%d %H:%M:%S")] Running bot."
-until python redditbot.py; do
+until python3 redditbot.py; do
 	echo "[$(date +"%Y-%m-%d %H:%M:%S")] CRASH" >&2
 	sleep 1
 done
