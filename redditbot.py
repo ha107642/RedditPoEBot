@@ -65,11 +65,13 @@ def bot_messages():
             add_parsed(message.id)
 
 # Regex Magic that finds the text encaptured with [[ ]]
-pattern = re.compile("\[\[([^\[\]]*)\]\]")
+escape_pattern = re.compile(r"\\([\[\]])")
+pattern = re.compile(r"\[\[([^\[\]]*)\]\]")
 
 def build_reply(text):
     reply = ""
     if text == None: return None
+    text = escape_pattern.sub(r"\1", text) # Remove escaped brackets (Sometimes it looks like this: \[\[Item Name\]\])
     links = pattern.findall(text)
     if not links: return None
     # Remove duplicates
@@ -170,7 +172,7 @@ if __name__ == "__main__":
     username = r.user.me().name
 
     # Fill in the subreddit(s) here. Multisubs are done with + (e.g. MagicTCG+EDH)
-    subreddit = r.subreddit('PathOfExileFR+pathofexile')
+    subreddit = r.subreddit("PathOfExileFR+pathofexile+PathOfExileBuilds")
 
     # Infinite loop that calls the function. The function outputs the post-ID's of all parsed comments.
     # The ID's of parsed comments is compared with the already parsed comments so the list stays clean
